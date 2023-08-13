@@ -8,7 +8,6 @@ import (
 	"github.com/Ravictation/golang_backend_coffeeshop/internal/pkg"
 	"github.com/Ravictation/golang_backend_coffeeshop/internal/repositories"
 	"github.com/asaskevich/govalidator"
-
 	"github.com/gin-gonic/gin"
 )
 
@@ -25,7 +24,7 @@ func (h *HandlerUser) PostData(ctx *gin.Context) {
 	user := models.User{
 		Role: "user",
 	}
-
+	user.Image_user = ctx.MustGet("image").(string)
 	if err := ctx.ShouldBind(&user); err != nil {
 		ctx.AbortWithError(http.StatusBadRequest, err)
 		return
@@ -59,14 +58,22 @@ func (h *HandlerUser) PostData(ctx *gin.Context) {
 }
 
 func (h *HandlerUser) UpdateData(ctx *gin.Context) {
-
+	var ers error
 	var user models.User
-	user.Id_user = ctx.Param("id_user")
+	user.Username = ctx.Param("username")
 
 	if err := ctx.ShouldBind(&user); err != nil {
 		ctx.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
+	user.Password, ers = pkg.HashPassword(user.Password)
+	if ers != nil {
+		pkg.NewRes(401, &config.Result{
+			Data: ers.Error(),
+		}).Send(ctx)
+		return
+	}
+	user.Image_user = ctx.MustGet("image").(string)
 
 	response, err := h.UpdateUser(&user)
 	if err != nil {

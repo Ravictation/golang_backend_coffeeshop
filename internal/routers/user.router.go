@@ -2,6 +2,7 @@ package routers
 
 import (
 	"github.com/Ravictation/golang_backend_coffeeshop/internal/handlers"
+	"github.com/Ravictation/golang_backend_coffeeshop/internal/middleware"
 	"github.com/Ravictation/golang_backend_coffeeshop/internal/repositories"
 
 	"github.com/gin-gonic/gin"
@@ -16,9 +17,9 @@ func user(g *gin.Engine, d *sqlx.DB) {
 	repo := repositories.NewUser(d)
 	handler := handlers.NewUser(repo)
 
-	route.POST("/", handler.PostData)
-	route.PATCH("/:id_user", handler.UpdateData)
-	route.GET("/:id_user", handler.GetDataUser)
+	route.POST("/", middleware.UploadFile, handler.PostData)
+	route.PATCH("/:username", middleware.UploadFile, handler.UpdateData)
+	route.GET("/:id_user", middleware.Authjwt("admin"), handler.GetDataUser)
 	route.DELETE("/:id_user", handler.DeleteData)
 
 }

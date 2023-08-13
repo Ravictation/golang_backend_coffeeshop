@@ -2,7 +2,6 @@ package repositories
 
 import (
 	"errors"
-	"fmt"
 
 	"github.com/Ravictation/golang_backend_coffeeshop/internal/models"
 
@@ -23,12 +22,14 @@ func (r *RepoUser) CreateUser(data *models.User) (string, error) {
 				email_user, 
 				password, 
 				phone_number,
+				image_user,
 				role) 
 				VALUES(
 					:username,
 					:email_user,
 					:password, 
 					:phone_number,
+					:image_user,
 					:role
 				);`
 
@@ -41,12 +42,16 @@ func (r *RepoUser) CreateUser(data *models.User) (string, error) {
 }
 
 func (r *RepoUser) UpdateUser(data *models.User) (string, error) {
+	query := `UPDATE public.user SET
+				password = COALESCE(NULLIF(:password, ''), password),
+				image_user = COALESCE(NULLIF(:image_user, ''), image_user),
+				phone_number = COALESCE(NULLIF(:phone_number, ''), phone_number),
+				updated_at = now()
+			WHERE username = :username`
 
-	query := `UPDATE public.user SET pass=:pass, phone_number=:phone_number WHERE id_user = :id_user;`
-	_, er := r.NamedExec(query, data)
-	if er != nil {
-		fmt.Print("ini errornya", er)
-		return "", er
+	_, err := r.NamedExec(query, data)
+	if err != nil {
+		return "", err
 	}
 
 	return "1 data has been updated", nil

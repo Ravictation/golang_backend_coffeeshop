@@ -2,8 +2,8 @@ package handlers
 
 import (
 	"github.com/Ravictation/golang_backend_coffeeshop/config"
+	"github.com/Ravictation/golang_backend_coffeeshop/internal/pkg"
 	"github.com/Ravictation/golang_backend_coffeeshop/internal/repositories"
-	"github.com/Ravictation/golang_backend_coffeeshop/pkg"
 	"github.com/gin-gonic/gin"
 )
 
@@ -39,13 +39,13 @@ func (h *HandlerAuth) Login(ctx *gin.Context) {
 
 	if err := pkg.VerifyPassword(users.Password, data.Password); err != nil {
 		pkg.NewRes(401, &config.Result{
-			Data: "Password salah",
+			Data: "wrong password",
 		}).Send(ctx)
 		return
 	}
 
 	jwtt := pkg.NewToken(users.Id_user, users.Role)
-	tokens, err := jwtt.Generate()
+	token, err := jwtt.Generate()
 	if err != nil {
 		pkg.NewRes(500, &config.Result{
 			Data: err.Error(),
@@ -53,5 +53,6 @@ func (h *HandlerAuth) Login(ctx *gin.Context) {
 		return
 	}
 
-	pkg.NewRes(200, &config.Result{Data: tokens}).Send(ctx)
+	pkg.NewRes(200, &config.Result{Data: token}).Send(ctx)
+
 }
