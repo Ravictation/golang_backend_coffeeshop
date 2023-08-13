@@ -2,17 +2,17 @@ package pkg
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
+	"github.com/spf13/viper"
 )
 
 func Pgdb() (*sqlx.DB, error) {
-	host := os.Getenv("DB_HOST")
-	user := os.Getenv("DB_USER")
-	password := os.Getenv("DB_PASS")
-	dbName := os.Getenv("DB_NAME")
+	host := viper.GetString("database.host")
+	user := viper.GetString("database.user")
+	password := viper.GetString("database.pass")
+	dbName := viper.GetString("database.name")
 
 	config := fmt.Sprintf("host=%s user=%s password=%s dbname=%s sslmode=disable", host, user, password, dbName)
 

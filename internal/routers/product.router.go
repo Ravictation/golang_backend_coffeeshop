@@ -8,8 +8,7 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-// ! /movie
-func movie(g *gin.Engine, d *sqlx.DB) {
+func product(g *gin.Engine, d *sqlx.DB) {
 	route := g.Group("/product")
 
 	// dependcy injection

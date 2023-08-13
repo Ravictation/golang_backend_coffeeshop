@@ -9,7 +9,7 @@ import (
 )
 
 // ! /movie
-func movie(g *gin.Engine, d *sqlx.DB) {
+func user(g *gin.Engine, d *sqlx.DB) {
 	route := g.Group("/user")
 
 	// dependcy injection
@@ -17,8 +17,8 @@ func movie(g *gin.Engine, d *sqlx.DB) {
 	handler := handlers.NewUser(repo)
 
 	route.POST("/", handler.PostData)
-	route.PATCH("/", handler.UpdateData)
-	route.GET("/", handler.GetDataUser)
-	route.DELETE("/", handler.DeleteData)
+	route.PATCH("/:id_user", handler.UpdateData)
+	route.GET("/:id_user", handler.GetDataUser)
+	route.DELETE("/:id_user", handler.DeleteData)
 
 }

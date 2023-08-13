@@ -1,11 +1,13 @@
 package handlers
 
 import (
-	"fmt"
 	"net/http"
 
+	"github.com/Ravictation/golang_backend_coffeeshop/config"
 	"github.com/Ravictation/golang_backend_coffeeshop/internal/models"
+	"github.com/Ravictation/golang_backend_coffeeshop/internal/pkg"
 	"github.com/Ravictation/golang_backend_coffeeshop/internal/repositories"
+	"github.com/asaskevich/govalidator"
 
 	"github.com/gin-gonic/gin"
 )
@@ -19,21 +21,41 @@ func NewUser(r *repositories.RepoUser) *HandlerUser {
 }
 
 func (h *HandlerUser) PostData(ctx *gin.Context) {
-
-	var user models.User
+	var ers error
+	user := models.User{
+		Role: "user",
+	}
 
 	if err := ctx.ShouldBind(&user); err != nil {
 		ctx.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
+	_, ers = govalidator.ValidateStruct(&user)
+	if ers != nil {
+		pkg.NewRes(401, &config.Result{
+			Data: ers.Error(),
+		}).Send(ctx)
+		return
+	}
 
-	respone, err := h.CreateUser(&user)
+	user.Password, ers = pkg.HashPassword(user.Password)
+	if ers != nil {
+		pkg.NewRes(401, &config.Result{
+			Data: ers.Error(),
+		}).Send(ctx)
+		return
+	}
+
+	response, err := h.CreateUser(&user)
 	if err != nil {
 		ctx.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
-
-	ctx.JSON(200, respone)
+	ctx.JSON(http.StatusOK, gin.H{
+		"status":      http.StatusOK,
+		"description": "OK",
+		"data":        response,
+	})
 }
 
 func (h *HandlerUser) UpdateData(ctx *gin.Context) {
@@ -46,19 +68,19 @@ func (h *HandlerUser) UpdateData(ctx *gin.Context) {
 		return
 	}
 
-	fmt.Print(user)
-
-	respone, err := h.UpdateUser(&user)
+	response, err := h.UpdateUser(&user)
 	if err != nil {
 		ctx.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
-
-	ctx.JSON(200, respone)
+	ctx.JSON(http.StatusOK, gin.H{
+		"status":      http.StatusOK,
+		"description": "OK",
+		"data":        response,
+	})
 }
 
 func (h *HandlerUser) GetDataUser(ctx *gin.Context) {
-
 	var user models.User
 	user.Id_user = ctx.Param("id_user")
 
@@ -67,13 +89,17 @@ func (h *HandlerUser) GetDataUser(ctx *gin.Context) {
 		return
 	}
 
-	respone, err := h.GetUser(&user)
+	response, err := h.GetUser(&user)
 	if err != nil {
-		ctx.AbortWithError(http.StatusBadRequest, err)
+		ctx.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}
 
-	ctx.JSON(200, respone)
+	ctx.JSON(http.StatusOK, gin.H{
+		"status":      http.StatusOK,
+		"description": "OK",
+		"data":        response,
+	})
 }
 
 func (h *HandlerUser) GetAllData(ctx *gin.Context) {
@@ -85,13 +111,16 @@ func (h *HandlerUser) GetAllData(ctx *gin.Context) {
 		return
 	}
 
-	respone, err := h.GetAllUser(&user)
+	response, err := h.GetAllUser(&user)
 	if err != nil {
 		ctx.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
-
-	ctx.JSON(200, respone)
+	ctx.JSON(http.StatusOK, gin.H{
+		"status":      http.StatusOK,
+		"description": "OK",
+		"data":        response,
+	})
 }
 
 func (h *HandlerUser) DeleteData(ctx *gin.Context) {
@@ -103,11 +132,14 @@ func (h *HandlerUser) DeleteData(ctx *gin.Context) {
 		return
 	}
 
-	respone, err := h.DeleteUser(&user)
+	response, err := h.DeleteUser(&user)
 	if err != nil {
 		ctx.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
-
-	ctx.JSON(200, respone)
+	ctx.JSON(http.StatusOK, gin.H{
+		"status":      http.StatusOK,
+		"description": "OK",
+		"data":        response,
+	})
 }

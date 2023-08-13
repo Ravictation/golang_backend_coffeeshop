@@ -1,4 +1,4 @@
-// package handlers
+package handlers
 
 // import (
 // 	"github.com/Ravictation/golang_backend_coffeeshop/internal/models"

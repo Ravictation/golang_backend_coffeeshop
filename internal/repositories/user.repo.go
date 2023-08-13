@@ -1,8 +1,8 @@
 package repositories
 
 import (
+	"errors"
 	"fmt"
-	"log"
 
 	"github.com/Ravictation/golang_backend_coffeeshop/internal/models"
 
@@ -18,14 +18,18 @@ func NewUser(db *sqlx.DB) *RepoUser {
 }
 
 func (r *RepoUser) CreateUser(data *models.User) (string, error) {
-	query := `INSERT INTO coffeshop."user" ( 
-				email, 
-				pass, 
-				phone_number) 
+	query := `INSERT INTO public.user ( 
+				username,
+				email_user, 
+				password, 
+				phone_number,
+				role) 
 				VALUES(
-					:email,
-					:pass, 
-					:phone_number
+					:username,
+					:email_user,
+					:password, 
+					:phone_number,
+					:role
 				);`
 
 	_, err := r.NamedExec(query, data)
@@ -38,7 +42,7 @@ func (r *RepoUser) CreateUser(data *models.User) (string, error) {
 
 func (r *RepoUser) UpdateUser(data *models.User) (string, error) {
 
-	query := `UPDATE coffeshop.user SET pass=:pass, phone_number=:phone_number WHERE id_user = :id_user;`
+	query := `UPDATE public.user SET pass=:pass, phone_number=:phone_number WHERE id_user = :id_user;`
 	_, er := r.NamedExec(query, data)
 	if er != nil {
 		fmt.Print("ini errornya", er)
@@ -48,19 +52,14 @@ func (r *RepoUser) UpdateUser(data *models.User) (string, error) {
 	return "1 data has been updated", nil
 }
 
-func (r *RepoUser) GetUser(data *models.User) (interface{}, error) {
-
-	fmt.Println(data)
+func (r *RepoUser) GetUser(data *models.User) (*models.User, error) {
+	query := `SELECT email_user, phone_number, image_user FROM public.user WHERE id_user=$1;`
 	var userModel models.User
-	query := `SELECT * FROM coffeshop."user" WHERE id_user=$1;`
-	fmt.Println(&userModel)
 	err := r.Get(&userModel, query, data.Id_user)
 	if err != nil {
-		log.Fatal(err)
-		return userModel, err
+		return nil, err
 	}
-
-	return userModel, nil
+	return &userModel, nil
 }
 
 func (r *RepoUser) GetAllUser(data *models.User) ([]models.User, error) {
@@ -77,7 +76,7 @@ func (r *RepoUser) GetAllUser(data *models.User) ([]models.User, error) {
 
 	// return user, nil
 	var users []models.User
-	query := "SELECT * FROM coffeshop.user"
+	query := "SELECT * FROM public.user"
 	err := r.Select(&users, query)
 
 	if err != nil {
@@ -88,7 +87,7 @@ func (r *RepoUser) GetAllUser(data *models.User) ([]models.User, error) {
 }
 
 func (r *RepoUser) DeleteUser(data *models.User) (string, error) {
-	query := `DELETE FROM coffeshop."user" WHERE id_user = :id_user;`
+	query := `DELETE FROM public.user WHERE id_user = :id_user;`
 
 	_, err := r.NamedExec(query, data)
 	if err != nil {
@@ -96,4 +95,19 @@ func (r *RepoUser) DeleteUser(data *models.User) (string, error) {
 	}
 
 	return "1 data has been Deleted", nil
+}
+
+func (r *RepoUser) GetAuthData(user string) (*models.User, error) {
+	var result models.User
+	q := `SELECT id_user, username, "role", "password" FROM public."user" WHERE username = ?`
+
+	if err := r.Get(&result, r.Rebind(q), user); err != nil {
+		if err.Error() == "sql: no rows in result set" {
+			return nil, errors.New("username not found")
+		}
+
+		return nil, err
+	}
+
+	return &result, nil
 }

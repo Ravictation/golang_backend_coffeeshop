@@ -33,24 +33,24 @@ func (h *HandlerProduct) PostProduct(ctx *gin.Context) {
 	ctx.JSON(200, response)
 }
 
-func (h *HandlerProduct) GetAllDataProduct(ctx *gin.Context) {
+// func (h *HandlerProduct) GetAllDataProduct(ctx *gin.Context) {
 
-	var product models.Product
-	product.Id_product = ctx.Param("id_product")
+// 	var product models.Product
+// 	product.Id_product = ctx.Param("id_product")
 
-	if err := ctx.ShouldBindUri(&product); err != nil {
-		ctx.AbortWithError(http.StatusBadRequest, err)
-		return
-	}
+// 	if err := ctx.ShouldBindUri(&product); err != nil {
+// 		ctx.AbortWithError(http.StatusBadRequest, err)
+// 		return
+// 	}
 
-	respone, err := h.GetAllProduct(&product)
-	if err != nil {
-		ctx.AbortWithError(http.StatusBadRequest, err)
-		return
-	}
+// 	respone, err := h.GetAllProduct(&product)
+// 	if err != nil {
+// 		ctx.AbortWithError(http.StatusBadRequest, err)
+// 		return
+// 	}
 
-	ctx.JSON(200, respone)
-}
+// 	ctx.JSON(200, respone)
+// }
 
 func (h *HandlerProduct) GetDataProduct(ctx *gin.Context) {
 
