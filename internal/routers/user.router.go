@@ -9,17 +9,16 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-// ! /movie
 func user(g *gin.Engine, d *sqlx.DB) {
 	route := g.Group("/user")
 
-	// dependcy injection
 	repo := repositories.NewUser(d)
 	handler := handlers.NewUser(repo)
 
-	route.POST("/", middleware.UploadFile, handler.PostData)
-	route.PATCH("/:username", middleware.UploadFile, handler.UpdateData)
-	route.GET("/:id_user", middleware.Authjwt("admin"), handler.GetDataUser)
-	route.DELETE("/:id_user", handler.DeleteData)
+	route.POST("/", middleware.UploadFile("image_user"), handler.PostData)
+	route.PATCH("/:username", middleware.UploadFile("image_user"), handler.UpdateData)
+	route.GET("/", handler.GetAllData)
+	route.GET("/:username", middleware.Authjwt("admin"), handler.GetDataUser)
+	route.DELETE("/:username", handler.DeleteData)
 
 }

@@ -22,15 +22,15 @@ func (r *RepoUser) CreateUser(data *models.User) (string, error) {
 				email_user, 
 				password, 
 				phone_number,
-				image_user,
-				role) 
+				role,
+				image_user) 
 				VALUES(
 					:username,
 					:email_user,
 					:password, 
 					:phone_number,
-					:image_user,
-					:role
+					:role,
+					:image_user
 				);`
 
 	_, err := r.NamedExec(query, data)
@@ -54,13 +54,13 @@ func (r *RepoUser) UpdateUser(data *models.User) (string, error) {
 		return "", err
 	}
 
-	return "1 data has been updated", nil
+	return "1 data user has been updated", nil
 }
 
 func (r *RepoUser) GetUser(data *models.User) (*models.User, error) {
-	query := `SELECT email_user, phone_number, image_user FROM public.user WHERE id_user=$1;`
+	query := `SELECT email_user, phone_number, image_user,role FROM public.user WHERE username=$1;`
 	var userModel models.User
-	err := r.Get(&userModel, query, data.Id_user)
+	err := r.Get(&userModel, query, data.Username)
 	if err != nil {
 		return nil, err
 	}
@@ -69,19 +69,8 @@ func (r *RepoUser) GetUser(data *models.User) (*models.User, error) {
 
 func (r *RepoUser) GetAllUser(data *models.User) ([]models.User, error) {
 
-	//var user models.User
-	// query := `SELECT email, pass, phone_number, created_at, updated_at FROM coffeshop."user";`
-	// err := r.Get(&user, query)
-	//fmt.Printf("%v\n", user)
-	//fmt.Println(err)
-	// if err != nil {
-	// 	log.Fatal(err)
-	// 	return user, err
-	// }
-
-	// return user, nil
 	var users []models.User
-	query := "SELECT * FROM public.user"
+	query := "SELECT username, image_user, phone_number, email_user,role FROM public.user"
 	err := r.Select(&users, query)
 
 	if err != nil {
@@ -92,14 +81,14 @@ func (r *RepoUser) GetAllUser(data *models.User) ([]models.User, error) {
 }
 
 func (r *RepoUser) DeleteUser(data *models.User) (string, error) {
-	query := `DELETE FROM public.user WHERE id_user = :id_user;`
+	query := `DELETE FROM public.user WHERE username = $1;`
 
-	_, err := r.NamedExec(query, data)
+	_, err := r.Exec(query, data.Username)
 	if err != nil {
 		return "", err
 	}
 
-	return "1 data has been Deleted", nil
+	return "1 user has been Deleted", nil
 }
 
 func (r *RepoUser) GetAuthData(user string) (*models.User, error) {

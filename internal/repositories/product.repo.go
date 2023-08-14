@@ -1,6 +1,7 @@
 package repositories
 
 import (
+	"errors"
 	"fmt"
 	"log"
 
@@ -15,6 +16,14 @@ type RepoProduct struct {
 
 func NewProduct(db *sqlx.DB) *RepoProduct {
 	return &RepoProduct{db}
+}
+
+type Pagination struct {
+	Next          int
+	Previous      int
+	RecordPerPage int
+	CurrentPage   int
+	TotalPage     int
 }
 
 func (r RepoProduct) CreateProduct(data *models.Product) (string, error) {
@@ -40,7 +49,12 @@ func (r RepoProduct) CreateProduct(data *models.Product) (string, error) {
 
 func (r *RepoProduct) UpdateProduct(data *models.Product) (string, error) {
 
-	query := `UPDATE public.products SET product_name=:product_name, price=:price WHERE id_product = :id_product;`
+	query := `UPDATE public.products SET
+	product_name = COALESCE(NULLIF(:product_name, ''), product_name),
+	price = COALESCE(NULLIF(:price, 0), price),
+	product_image = COALESCE(NULLIF(:product_image, ''), product_image),
+	updated_at = now()
+WHERE id_product = :id_product`
 	_, er := r.NamedExec(query, data)
 	if er != nil {
 		fmt.Print(er)
@@ -78,35 +92,66 @@ func (r *RepoProduct) GetProduct(data *models.Product) (*models.Product, error) 
 	return &product, nil
 }
 
-func (r *RepoProduct) GetAllProduct(search string, page int, limit int, categories string) ([]models.Product, error) {
+func (r *RepoProduct) GetAllProduct(search string, page int, limit int, categories string) ([]models.Product, *Pagination, error) {
 	var products []models.Product
 
-	query := `SELECT product_name, price, categories, product_image FROM public.products WHERE 1=1`
+	var (
+		pgnt        = &Pagination{}
+		recordcount int
+	)
 
-	if search != "" {
-		query += " AND product_name ILIKE '%' || $1 || '%'"
+	if page == 0 {
+		page = 1
 	}
 
-	if categories != "" {
-		query += " AND categories = $2"
+	if limit == 0 {
+		limit = 5
 	}
 
-	if limit > 0 {
-		query += fmt.Sprintf(" LIMIT %d", limit)
+	offset := limit * (page - 1)
+
+	sqltable := fmt.Sprintf("SELECT count(id_product) FROM products")
+
+	r.QueryRow(sqltable).Scan(&recordcount)
+
+	total := (recordcount / limit)
+
+	remainder := (recordcount % limit)
+	if remainder == 0 {
+		pgnt.TotalPage = total
+	} else {
+		pgnt.TotalPage = total + 1
 	}
 
-	if page > 0 && limit > 0 {
-		offset := (page - 1) * limit
-		query += fmt.Sprintf(" OFFSET %d", offset)
+	pgnt.CurrentPage = page
+	pgnt.RecordPerPage = limit
+
+	if page <= 0 {
+		pgnt.Next = page + 1
+	} else if page < pgnt.TotalPage {
+		pgnt.Previous = page - 1
+		pgnt.Next = page + 1
+	} else if page == pgnt.TotalPage {
+		pgnt.Previous = page - 1
+		pgnt.Next = 0
 	}
 
-	err := r.Select(&products, query, search, categories)
-	if err != nil {
-		log.Println(err)
-		return nil, err
+	if search != "" && categories != "" {
+		query := `SELECT * FROM products WHERE product_name ILIKE '%' || $1 || '%' AND categories = $2 LIMIT $3 OFFSET $4`
+		r.Select(&products, query, search, categories, limit, offset)
+	} else if search != "" {
+		query := `SELECT * FROM products WHERE product_name ILIKE '%' || $1 || '%' LIMIT $2 OFFSET $3`
+		r.Select(&products, query, search, limit, offset)
+	} else if categories != "" {
+		query := `SELECT * FROM products WHERE categories = $1 LIMIT $2 OFFSET $3`
+		r.Select(&products, query, categories, limit, offset)
+	} else {
+		r.Select(&products, `SELECT * FROM products LIMIT $1 OFFSET $2`, limit, offset)
 	}
-
-	return products, nil
+	if len(products) == 0 {
+		return nil, nil, errors.New("data not found.")
+	}
+	return products, pgnt, nil
 }
 
 // func (r *RepoProduct) GetAllProduct(data *models.Product) ([]models.Product, error) {

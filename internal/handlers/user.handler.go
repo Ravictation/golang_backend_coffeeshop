@@ -50,11 +50,7 @@ func (h *HandlerUser) PostData(ctx *gin.Context) {
 		ctx.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
-	ctx.JSON(http.StatusOK, gin.H{
-		"status":      http.StatusOK,
-		"description": "OK",
-		"data":        response,
-	})
+	pkg.NewRes(200, &config.Result{Data: response}).Send(ctx)
 }
 
 func (h *HandlerUser) UpdateData(ctx *gin.Context) {
@@ -80,16 +76,12 @@ func (h *HandlerUser) UpdateData(ctx *gin.Context) {
 		ctx.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
-	ctx.JSON(http.StatusOK, gin.H{
-		"status":      http.StatusOK,
-		"description": "OK",
-		"data":        response,
-	})
+	pkg.NewRes(200, &config.Result{Data: response}).Send(ctx)
 }
 
 func (h *HandlerUser) GetDataUser(ctx *gin.Context) {
 	var user models.User
-	user.Id_user = ctx.Param("id_user")
+	user.Username = ctx.Param("username")
 
 	if err := ctx.ShouldBindUri(&user); err != nil {
 		ctx.AbortWithError(http.StatusBadRequest, err)
@@ -102,11 +94,7 @@ func (h *HandlerUser) GetDataUser(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"status":      http.StatusOK,
-		"description": "OK",
-		"data":        response,
-	})
+	pkg.NewRes(200, &config.Result{Data: response}).Send(ctx)
 }
 
 func (h *HandlerUser) GetAllData(ctx *gin.Context) {
@@ -123,30 +111,18 @@ func (h *HandlerUser) GetAllData(ctx *gin.Context) {
 		ctx.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
-	ctx.JSON(http.StatusOK, gin.H{
-		"status":      http.StatusOK,
-		"description": "OK",
-		"data":        response,
-	})
+	pkg.NewRes(200, &config.Result{Data: response}).Send(ctx)
 }
 
 func (h *HandlerUser) DeleteData(ctx *gin.Context) {
 
 	var user models.User
-
-	if err := ctx.ShouldBindUri(&user); err != nil {
-		ctx.AbortWithError(http.StatusBadRequest, err)
-		return
-	}
+	user.Username = ctx.Param("username")
 
 	response, err := h.DeleteUser(&user)
 	if err != nil {
 		ctx.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
-	ctx.JSON(http.StatusOK, gin.H{
-		"status":      http.StatusOK,
-		"description": "OK",
-		"data":        response,
-	})
+	pkg.NewRes(200, &config.Result{Data: response}).Send(ctx)
 }
